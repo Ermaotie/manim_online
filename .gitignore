@@ -2,3 +2,5 @@ node_modules
 temp
 videos
 __pycache__
+test_output
+manim_backend/logs
