@@ -81,8 +81,10 @@ const Home = () => {
   }
 
   const pollVideoStatus = async (videoId) => {
-    const maxAttempts = 60 // 最多轮询60次
+    const maxAttempts = 120 // 增加轮询次数到120次（最长4分钟）
     let attempts = 0
+    let lastErrorTime = 0
+    const errorRetryDelay = 5000 // 错误重试延迟5秒
 
     const checkStatus = async () => {
       try {
@@ -104,20 +106,31 @@ const Home = () => {
         // 继续轮询
         attempts++
         if (attempts < maxAttempts) {
-          setTimeout(checkStatus, 2000) // 每2秒轮询一次
+          // 动态调整轮询间隔：开始时2秒，逐渐增加到5秒
+          const interval = Math.min(2000 + Math.floor(attempts / 10) * 1000, 5000)
+          setTimeout(checkStatus, interval)
         } else {
           setVideoStatus('error')
-          setError('视频生成超时，请稍后查看个人中心')
+          setError('视频生成超时（最长等待4分钟），请稍后查看个人中心')
           setLoading(false)
         }
       } catch (error) {
         console.error('轮询视频状态失败:', error)
+        
+        // 错误处理：如果是网络错误，增加重试延迟
+        const now = Date.now()
+        if (now - lastErrorTime < 30000) { // 30秒内连续错误
+          attempts += 3 // 快速消耗尝试次数
+        }
+        lastErrorTime = now
+        
         attempts++
         if (attempts < maxAttempts) {
-          setTimeout(checkStatus, 2000)
+          // 错误时使用更长的重试间隔
+          setTimeout(checkStatus, errorRetryDelay)
         } else {
           setVideoStatus('error')
-          setError('获取视频状态失败')
+          setError('获取视频状态失败，请检查网络连接')
           setLoading(false)
         }
       }
@@ -192,14 +205,6 @@ const Home = () => {
               >
                 {loading && !generatedCode ? '生成中...' : '生成Manim代码'}
               </button>
-              
-              <button 
-                onClick={handleReset}
-                className="btn-secondary"
-                disabled={loading}
-              >
-                重置
-              </button>
             </div>
           </div>
           
@@ -247,7 +252,7 @@ const Home = () => {
                 </div>
               )}
               
-              {videoStatus === 'completed' && currentVideo && currentVideo.video_url && (
+              {videoStatus === 'completed' && currentVideo && currentVideo.video_path && (
                 <div style={{ width: '100%', maxWidth: '500px' }}>
                   <video 
                     controls 
@@ -258,7 +263,7 @@ const Home = () => {
                       borderRadius: '8px',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                     }}
-                    src={currentVideo.video_url}
+                    src={`http://localhost:8888/downloadvideo${currentVideo.video_path.replace(/\\/g, '/').replace('/videos/', '/')}`}
                   >
                     您的浏览器不支持视频播放
                   </video>
@@ -277,7 +282,7 @@ const Home = () => {
                     </button>
                     
                     <button 
-                      onClick={() => window.open(currentVideo.video_url, '_blank')}
+                      onClick={() => window.open(`http://localhost:8888/downloadvideo${currentVideo.video_path.replace(/\\/g, '/').replace('/videos/', '/')}`, '_blank')}
                       className="btn-secondary"
                     >
                       在新窗口打开
@@ -332,14 +337,6 @@ const Home = () => {
                 {videoStatus === 'generating' ? '创建任务中...' : 
                  videoStatus === 'processing' ? '处理中...' : 
                  '生成视频'}
-              </button>
-              
-              <button 
-                onClick={() => navigator.clipboard.writeText(generatedCode)}
-                className="btn-secondary"
-                disabled={loading}
-              >
-                复制代码
               </button>
             </div>
           </div>

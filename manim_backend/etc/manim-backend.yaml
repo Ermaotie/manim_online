@@ -6,6 +6,9 @@ Port: 8888
 Timeout: 60000  # 30秒超时
 MaxBytes: 10485760  # 10MB最大请求大小
 
+# CORS配置
+Cors: true
+
 Log:
   Level: info
   Mode: file

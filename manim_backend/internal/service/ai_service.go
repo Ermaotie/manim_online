@@ -21,7 +21,9 @@ func NewAIService(cfg config.OpenAIConfig) *AIService {
 	if cfg.BaseURL == "" {
 		clientConfig.BaseURL = "https://api.siliconflow.cn/v1"
 	} else {
-		clientConfig.BaseURL = cfg.BaseURL
+		// 确保BaseURL格式正确，移除末尾的斜杠
+		baseURL := strings.TrimSuffix(cfg.BaseURL, "/")
+		clientConfig.BaseURL = baseURL
 	}
 
 	client := openai.NewClientWithConfig(clientConfig)

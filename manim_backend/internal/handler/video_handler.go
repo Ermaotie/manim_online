@@ -138,11 +138,17 @@ func (h *VideoHandler) GetVideo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 将相对路径转换为完整URL
+	var videoURL string
+	if video.VideoPath != "" {
+		videoURL = "/" + video.VideoPath
+	}
+
 	WriteJSON(w, http.StatusOK, types.VideoResponse{
 		ID:        video.ID,
 		Prompt:    video.Prompt,
 		ManimCode: video.ManimCode,
-		VideoPath: video.VideoPath,
+		VideoPath: videoURL,
 		Status:    video.Status.String(),
 		ErrorMsg:  video.ErrorMsg,
 		CreatedAt: video.CreatedAt.Format("2006-01-02 15:04:05"),
@@ -184,10 +190,16 @@ func (h *VideoHandler) ListVideos(w http.ResponseWriter, r *http.Request) {
 
 	var videoResponses []types.VideoResponse
 	for _, video := range videos {
+		// 将相对路径转换为完整URL
+		var videoURL string
+		if video.VideoPath != "" {
+			videoURL = "/" + video.VideoPath
+		}
+
 		videoResponses = append(videoResponses, types.VideoResponse{
 			ID:        video.ID,
 			Prompt:    video.Prompt,
-			VideoPath: video.VideoPath,
+			VideoPath: videoURL,
 			Status:    video.Status.String(),
 			ErrorMsg:  video.ErrorMsg,
 			CreatedAt: video.CreatedAt.Format("2006-01-02 15:04:05"),

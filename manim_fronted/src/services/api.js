@@ -5,7 +5,7 @@ const API_BASE_URL = '/api'
 // 创建axios实例
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 60000, // 增加超时时间到60秒，适应视频渲染需求
 })
 
 // 请求拦截器 - 添加token

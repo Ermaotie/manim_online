@@ -138,7 +138,7 @@ const Profile = () => {
                   </div>
                   
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    {video.status === 'completed' && video.video_url && (
+                    {video.status === 'completed' && video.video_path && (
                       <button 
                         onClick={() => handleDownload(video.id, `animation_${video.id}.mp4`)}
                         className="btn-primary"
@@ -148,14 +148,14 @@ const Profile = () => {
                       </button>
                     )}
                     
-                    {video.status === 'completed' && video.video_url && (
+                    {video.status === 'completed' && video.video_path && (
                       <button 
-                        onClick={() => window.open(video.video_url, '_blank')}
-                        className="btn-secondary"
-                        style={{ flex: 1 }}
-                      >
-                        在线预览
-                      </button>
+                      onClick={() => window.open(`http://localhost:8888/downloadvideo${video.video_path.replace(/\\/g, '/').replace('/videos/', '/')}`, '_blank')}
+                      className="btn-secondary"
+                      style={{ flex: 1 }}
+                    >
+                      在线预览
+                    </button>
                     )}
                     
                     {(video.status === 'pending' || video.status === 'processing') && (
