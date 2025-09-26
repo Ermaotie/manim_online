@@ -1,0 +1,472 @@
+{
+  "info": {
+    "name": "Manim后端API测试",
+    "description": "Manim后端API测试集合，包含用户认证、视频生成等API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8888",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "用户注册",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/register",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "register"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "用户登录",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 检查响应状态码",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// 检查响应体包含token",
+              "pm.test(\"Response has token\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.token).to.be.a('string');",
+              "    pm.expect(jsonData.user).to.be.an('object');",
+              "    ",
+              "    // 设置环境变量",
+              "    pm.environment.set(\"token\", jsonData.token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "获取用户信息",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// 设置Authorization头",
+              "pm.request.headers.add({",
+              "    key: 'Authorization',",
+              "    value: 'Bearer ' + pm.environment.get(\"token\")",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/user/profile",
+          "host": ["{{base_url}}"],
+          "path": ["api", "user", "profile"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "创建视频（勾股定理演示）",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// 设置Authorization头",
+              "pm.request.headers.add({",
+              "    key: 'Authorization',",
+              "    value: 'Bearer ' + pm.environment.get(\"token\")",
+              "});"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 检查响应状态码",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// 检查响应体结构",
+              "pm.test(\"Response has video info\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.id).to.be.a('number');",
+              "    pm.expect(jsonData.prompt).to.be.a('string');",
+              "    pm.expect(jsonData.status).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\\n  \"prompt\": \"请生成一个演示勾股定理的Manim动画代码。要求：创建一个直角三角形，边长分别为3、4、5；在三个边上分别绘制正方形；展示三个正方形的面积关系：3² + 4² = 5²；添加适当的文字说明；使用流畅的动画效果展示。\"\\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/videos",
+          "host": ["{{base_url}}"],
+          "path": ["api", "videos"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "AI API健康检查",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// 设置Authorization头",
+              "pm.request.headers.add({",
+              "    key: 'Authorization',",
+              "    value: 'Bearer ' + pm.environment.get(\"token\")",
+              "});"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 检查响应状态码",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// 检查API健康状态",
+              "pm.test(\"API is healthy\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.be.a('string');",
+              "    pm.expect(jsonData.is_healthy).to.be.a('boolean');",
+              "    pm.expect(jsonData.message).to.be.a('string');",
+              "    ",
+              "    // 记录健康状态",
+              "    console.log('API健康状态:', jsonData.is_healthy);",
+              "    console.log('详细信息:', jsonData.message);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/ai/health",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ai", "health"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "AI代码生成",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// 设置Authorization头",
+              "pm.request.headers.add({",
+              "    key: 'Authorization',",
+              "    value: 'Bearer ' + pm.environment.get(\"token\")",
+              "});"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 检查响应状态码",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// 检查代码生成结果",
+              "pm.test(\"Code generated successfully\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.code).to.be.a('string');",
+              "    pm.expect(jsonData.is_valid).to.be.a('boolean');",
+              "    pm.expect(jsonData.message).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"prompt\": \"请生成一个简单的圆形动画\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ai/generate",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ai", "generate"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "代码验证",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// 设置Authorization头",
+              "pm.request.headers.add({",
+              "    key: 'Authorization',",
+              "    value: 'Bearer ' + pm.environment.get(\"token\")",
+              "});"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 检查响应状态码",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// 检查代码验证结果",
+              "pm.test(\"Code validation result\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.code).to.be.a('string');",
+              "    pm.expect(jsonData.is_valid).to.be.a('boolean');",
+              "    pm.expect(jsonData.message).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"from manim import *\\\\n\\\\nclass TestScene(Scene):\\\\n    def construct(self):\\\\n        pass\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ai/validate",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ai", "validate"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "获取视频列表",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// 设置Authorization头",
+              "pm.request.headers.add({",
+              "    key: 'Authorization',",
+              "    value: 'Bearer ' + pm.environment.get(\"token\")",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/videos?page=1&page_size=10",
+          "host": ["{{base_url}}"],
+          "path": ["api", "videos"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "page_size",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "获取视频详情",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// 设置Authorization头",
+              "pm.request.headers.add({",
+              "    key: 'Authorization',",
+              "    value: 'Bearer ' + pm.environment.get(\"token\")",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/videos/detail?id=1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "videos", "detail"],
+          "query": [
+            {
+              "key": "id",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "验证Manim代码",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// 设置Authorization头",
+              "pm.request.headers.add({",
+              "    key: 'Authorization',",
+              "    value: 'Bearer ' + pm.environment.get(\"token\")",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"from manim import *\\\\n\\\\nclass TestScene(Scene):\\\\n    def construct(self):\\\\n        circle = Circle()\\\\n        self.play(Create(circle))\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ai/validate",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ai", "validate"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "生成Manim代码",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// 设置Authorization头",
+              "pm.request.headers.add({",
+              "    key: 'Authorization',",
+              "    value: 'Bearer ' + pm.environment.get(\"token\")",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"prompt\": \"生成一个简单的圆形动画\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ai/generate",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ai", "generate"]
+        }
+      },
+      "response": []
+    }
+  ]
+}
